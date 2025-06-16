@@ -39,31 +39,20 @@ contract LiquidityManager {
         return liquidity;
     }
 
-    function addLiquiditySingleToken(address[] memory path, uint amountIn, uint amountOutMin, uint amountAMin, uint amountBMin, uint deadline) public {
-        IERC20(path[1]).safeTransferFrom(msg.sender, address(this), amountIn / 2);
-        uint amountOut = swapTokens(amountIn / 2, amountOutMin, path, deadline);
+    function addLiquiditySingleToken(address[] memory path, uint amountIn, uint amountOutMin, uint amountAMin, uint amountBMin, uint deadline) public returns (uint) {
+        IERC20(path[0]).safeTransferFrom(msg.sender, address(this), amountIn);
+        IERC20(path[0]).approve(V2Router02, amountIn);
+
+        uint[] memory amounts = IV2Router02(V2Router02).swapExactTokensForTokens(amountIn / 2, amountOutMin, path, address(this), deadline);
+
+        emit Swap(path[0], path[path.length - 1], amountIn, amounts[amounts.length - 1]);
 
         IERC20(path[0]).approve(V2Router02, amountIn / 2);
-        IERC20(path[1]).approve(V2Router02, amountOut);
+        IERC20(path[1]).approve(V2Router02, amounts[amounts.length - 1]);
 
-        (uint amountA, uint amountB, uint liquidity) = IV2Router02(V2Router02).addLiquidity(
-            path[0],
-            path[1],
-            amountIn / 2,
-            amountOut,
-            amountAMin,
-            amountBMin,
-            msg.sender,
-            deadline
-        );
-        if (amountIn / 2 > amountA) {
-            IERC20(path[0]).safeTransfer(msg.sender, amountIn / 2 - amountA);
-        }
-
-        if (amountOut > amountB) {
-            IERC20(path[1]).safeTransfer(msg.sender, amountOut - amountB);
-        }
+        (, , uint liquidity) = IV2Router02(V2Router02).addLiquidity(path[0], path[1], amountIn / 2, amounts[amounts.length - 1], amountAMin, amountBMin, msg.sender, deadline);
 
         emit AddLiquidity(path[0], path[1], liquidity);
+        return liquidity;
     }
 }

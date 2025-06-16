@@ -68,7 +68,7 @@ contract LiquidityManagerTest is Test {
         vm.startPrank(user);
 
         uint amountIn = 111 * 1e6;
-        uint amountOutMin = amountIn / 2 - 2;
+        uint amountOutMin = amountIn / 2 - 2 * 1e6;
         uint deadline = block.timestamp + 2 minutes;
         address[] memory path = new address[](2);
         path[0] = USDT;
