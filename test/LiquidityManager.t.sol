@@ -63,4 +63,26 @@ contract LiquidityManagerTest is Test {
 
         vm.stopPrank();
     }
+
+    function testAddLiquiditySingleInput() public {
+        vm.startPrank(user);
+
+        uint amountIn = 111 * 1e6;
+        uint amountOutMin = amountIn / 2 - 2;
+        uint deadline = block.timestamp + 2 minutes;
+        address[] memory path = new address[](2);
+        path[0] = USDT;
+        path[1] = USDC;
+
+        uint aBalanceBefore = IERC20(USDT).balanceOf(user);
+
+        IERC20(USDT).approve(address(lm), amountIn);
+        lm.addLiquiditySingleToken(path, amountIn, amountOutMin, ((amountIn / 2) * 98) / 100, (amountOutMin * 98) / 100, deadline);
+
+        uint aBalanceAfter = IERC20(USDT).balanceOf(user);
+
+        assertTrue(aBalanceAfter < aBalanceBefore);
+
+        vm.stopPrank();
+    }
 }
