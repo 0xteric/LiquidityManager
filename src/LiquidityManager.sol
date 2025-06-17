@@ -3,18 +3,21 @@
 pragma solidity ^0.8.24;
 
 import "./interfaces/IV2Router02.sol";
+import "./interfaces/IV2Factory.sol";
 import "../lib/openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
 import "../lib/openzeppelin-contracts/contracts/token/ERC20/utils/SafeERC20.sol";
 
 contract LiquidityManager {
     using SafeERC20 for IERC20;
     address public V2Router02;
+    address public V2Factory;
 
     event Swap(address tokenIn, address tokenOut, uint amountIn, uint amountOut);
     event AddLiquidity(address tokenA, address tokenB, uint lpAmount);
 
-    constructor(address _V2router02) {
+    constructor(address _V2router02, address _V2Factory) {
         V2Router02 = _V2router02;
+        V2Factory = _V2Factory;
     }
 
     function swapTokens(uint amountIn, uint amountOutMin, address[] memory path, uint deadline) public returns (uint) {
@@ -54,5 +57,12 @@ contract LiquidityManager {
 
         emit AddLiquidity(path[0], path[1], liquidity);
         return liquidity;
+    }
+
+    function removeLiquidity(address tokenA, address tokenB, uint liquidity, uint amountAMin, uint amountBMin, uint deadline) external {
+        address lp = IV2Factory(V2Factory).getPair(tokenA, tokenB);
+        IERC20(lp).safeTransferFrom(msg.sender, address(this), liquidity);
+        IERC20(lp).approve(V2Router02, liquidity);
+        IV2Router02(V2Router02).removeLiquidity(tokenA, tokenB, liquidity, amountAMin, amountBMin, msg.sender, deadline);
     }
 }

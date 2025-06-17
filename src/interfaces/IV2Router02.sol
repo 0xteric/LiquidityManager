@@ -16,5 +16,13 @@ interface IV2Router02 {
         uint deadline
     ) external returns (uint amountA, uint amountB, uint liquidity);
 
-    function getAmountsOut(uint amountIn, address[] memory path) external view returns (uint[] memory amounts);
+    function removeLiquidity(
+        address tokenA,
+        address tokenB,
+        uint liquidity,
+        uint amountAMin,
+        uint amountBMin,
+        address to,
+        uint deadline
+    ) external returns (uint amountA, uint amountB);
 }
